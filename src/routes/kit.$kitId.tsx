@@ -404,6 +404,44 @@ function SectionAnchor({
   );
 }
 
+function SourceTextSection({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+          // text read from the source · {words.toLocaleString()} words
+        </p>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => copy(text)}>
+            <Copy className="mr-2 h-3.5 w-3.5" /> Copy text
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)}>
+            {expanded ? "Collapse" : "Expand"}
+          </Button>
+        </div>
+      </div>
+      <div
+        className={`relative overflow-hidden rounded-2xl border border-[color:var(--border-subtle)] bg-foreground/[0.02] p-5 sm:p-6 ${
+          expanded ? "" : "max-h-96"
+        }`}
+      >
+        <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/80">
+          {text}
+        </pre>
+        {!expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
+            aria-label="Expand full text"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 function KitSideNav() {
   const [active, setActive] = useState<string>(KIT_SECTIONS[0].id);
   const lockRef = useRef<{ id: string; until: number } | null>(null);
