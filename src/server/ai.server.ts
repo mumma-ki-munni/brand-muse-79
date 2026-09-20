@@ -239,25 +239,57 @@ export async function callAIStructured<T>(opts: {
 }
 
 const FIRECRAWL_API = "https://api.firecrawl.dev";
+const FIRECRAWL_GATEWAY = "https://connector-gateway.lovable.dev/firecrawl";
+
+// Gateway-backed connections hand out a Lovable connection key (lovc_*), which
+// must be paired with LOVABLE_API_KEY and sent to the connector gateway.
+// Legacy connections hand out a real Firecrawl key (fc-*) used directly.
+function firecrawlRequest(path: string) {
+  const key = process.env.FIRECRAWL_API_KEY;
+  if (!key) return null;
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  if (key.startsWith("lovc_")) {
+    if (!lovableKey) return null;
+    return {
+      url: `${FIRECRAWL_GATEWAY}${path}`,
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": key,
+        "Content-Type": "application/json",
+      } as Record<string, string>,
+    };
+  }
+  return {
+    url: `${FIRECRAWL_API}${path}`,
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    } as Record<string, string>,
+  };
+}
+
+function looksLikeDocument(url: string) {
+  return /\.(pdf|docx?|pptx?)(\?|#|$)/i.test(url);
+}
 
 export async function firecrawlScrape(url: string) {
-  const key = process.env.FIRECRAWL_API_KEY;
-  if (!key) return directScrape(url);
+  const req = firecrawlRequest("/v2/scrape");
+  if (!req) return directScrape(url);
+  const isDoc = looksLikeDocument(url);
 
   async function apiScrape() {
-    const timeout = timeoutSignal(SCRAPE_TIMEOUT_MS);
+    const timeout = timeoutSignal(isDoc ? 60000 : SCRAPE_TIMEOUT_MS);
     try {
-      const res = await fetch(`${FIRECRAWL_API}/v2/scrape`, {
+      const res = await fetch(req!.url, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
-        },
+        headers: req!.headers,
         body: JSON.stringify({
           url,
-          formats: ["markdown", "rawHtml", "links", "branding", "summary"],
+          formats: isDoc
+            ? ["markdown"]
+            : ["markdown", "rawHtml", "links", "branding", "summary"],
           onlyMainContent: false,
-          timeout: 7000,
+          timeout: isDoc ? 55000 : 7000,
         }),
         signal: timeout.signal,
       });
@@ -272,6 +304,9 @@ export async function firecrawlScrape(url: string) {
     }
   }
 
+  // Documents (PDFs etc.) can't be parsed by the direct HTML fetch fallback.
+  if (isDoc) return apiScrape();
+
   try {
     return await Promise.any([directScrape(url), apiScrape()]);
   } catch (e: any) {
@@ -283,16 +318,14 @@ export async function firecrawlScrape(url: string) {
 
 // Map a site to discover URLs. Returns up to `limit` links.
 export async function firecrawlMap(url: string, limit = 50): Promise<string[]> {
-  const key = process.env.FIRECRAWL_API_KEY;
-  if (!key) return [];
+  const req = firecrawlRequest("/v2/map");
+  if (!req) return [];
+  if (looksLikeDocument(url)) return [];
   try {
     const timeout = timeoutSignal(MAP_TIMEOUT_MS);
-    const res = await fetch(`${FIRECRAWL_API}/v2/map`, {
+    const res = await fetch(req.url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-      },
+      headers: req.headers,
       body: JSON.stringify({ url, limit, includeSubdomains: false }),
       signal: timeout.signal,
     }).finally(timeout.clear);
