@@ -29,6 +29,7 @@ export type Database = {
           motion_style: Json | null
           name: string
           share_token: string | null
+          source_text: string | null
           source_type: string
           source_url: string | null
           status: string
@@ -50,6 +51,7 @@ export type Database = {
           motion_style?: Json | null
           name?: string
           share_token?: string | null
+          source_text?: string | null
           source_type?: string
           source_url?: string | null
           status?: string
@@ -71,6 +73,7 @@ export type Database = {
           motion_style?: Json | null
           name?: string
           share_token?: string | null
+          source_text?: string | null
           source_type?: string
           source_url?: string | null
           status?: string
