@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StartHereRouteImport } from './routes/start-here'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as DesignRouteImport } from './routes/design'
+import { Route as BuildRouteImport } from './routes/build'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ShareShareTokenRouteImport } from './routes/share.$shareToken'
 import { Route as KitKitIdRouteImport } from './routes/kit.$kitId'
@@ -31,6 +32,11 @@ const LibraryRoute = LibraryRouteImport.update({
 const DesignRoute = DesignRouteImport.update({
   id: '/design',
   path: '/design',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuildRoute = BuildRouteImport.update({
+  id: '/build',
+  path: '/build',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,6 +67,7 @@ const DesignHistoryDiffRoute = DesignHistoryDiffRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/build': typeof BuildRoute
   '/design': typeof DesignRouteWithChildren
   '/library': typeof LibraryRoute
   '/start-here': typeof StartHereRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/build': typeof BuildRoute
   '/design': typeof DesignRouteWithChildren
   '/library': typeof LibraryRoute
   '/start-here': typeof StartHereRoute
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/build': typeof BuildRoute
   '/design': typeof DesignRouteWithChildren
   '/library': typeof LibraryRoute
   '/start-here': typeof StartHereRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/build'
     | '/design'
     | '/library'
     | '/start-here'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/build'
     | '/design'
     | '/library'
     | '/start-here'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/build'
     | '/design'
     | '/library'
     | '/start-here'
@@ -125,6 +137,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuildRoute: typeof BuildRoute
   DesignRoute: typeof DesignRouteWithChildren
   LibraryRoute: typeof LibraryRoute
   StartHereRoute: typeof StartHereRoute
@@ -153,6 +166,13 @@ declare module '@tanstack/react-router' {
       path: '/design'
       fullPath: '/design'
       preLoaderRoute: typeof DesignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/build': {
+      id: '/build'
+      path: '/build'
+      fullPath: '/build'
+      preLoaderRoute: typeof BuildRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -218,6 +238,7 @@ const DesignRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuildRoute: BuildRoute,
   DesignRoute: DesignRouteWithChildren,
   LibraryRoute: LibraryRoute,
   StartHereRoute: StartHereRoute,
