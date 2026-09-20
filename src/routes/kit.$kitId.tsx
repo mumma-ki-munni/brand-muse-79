@@ -337,6 +337,11 @@ function KitPage() {
               <SectionAnchor id="voice" label="Voice">
                 <VoiceSection voice={data.voice} kitId={kit.id} />
               </SectionAnchor>
+              {typeof kit.source_text === "string" && kit.source_text.trim() && (
+                <SectionAnchor id="text" label="Source Text">
+                  <SourceTextSection text={kit.source_text} />
+                </SectionAnchor>
+              )}
               <SectionAnchor id="export" label="Export">
                 <ExportSection
                   kitId={kit.id}
@@ -374,6 +379,7 @@ const KIT_SECTIONS = [
   { id: "type", label: "Typography" },
   { id: "tokens", label: "Tokens" },
   { id: "voice", label: "Voice" },
+  { id: "text", label: "Source Text" },
   { id: "export", label: "Export" },
 ] as const;
 
