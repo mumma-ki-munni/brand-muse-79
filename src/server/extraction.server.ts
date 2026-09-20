@@ -927,8 +927,16 @@ export async function extractKitImpl(data: ExtractKitInput) {
         .filter((a): a is { kind: string; url: string } => !!a.url);
       const dedupedAssets: Array<{ kind: string; url: string }> = dedupAssetsByKey(allAssets);
 
+      // Keep the raw scraped text (page markdown and/or PDF text) so the kit
+      // page can show a readable "Source text" view alongside the visuals.
+      const sourceText = [markdown, ...((data.pdfTexts as string[] | undefined) ?? [])]
+        .filter((s): s is string => !!s && !!s.trim())
+        .join("\n\n---\n\n")
+        .slice(0, 200000) || null;
+
       // 3. Persist
       const updateRow: Record<string, any> = {
+        source_text: sourceText,
         name: extraction.name,
         status: "ready",
         typography_scale: extraction.typography_scale ?? [],

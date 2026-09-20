@@ -337,6 +337,11 @@ function KitPage() {
               <SectionAnchor id="voice" label="Voice">
                 <VoiceSection voice={data.voice} kitId={kit.id} />
               </SectionAnchor>
+              {typeof kit.source_text === "string" && kit.source_text.trim() && (
+                <SectionAnchor id="text" label="Source Text">
+                  <SourceTextSection text={kit.source_text} />
+                </SectionAnchor>
+              )}
               <SectionAnchor id="export" label="Export">
                 <ExportSection
                   kitId={kit.id}
@@ -374,6 +379,7 @@ const KIT_SECTIONS = [
   { id: "type", label: "Typography" },
   { id: "tokens", label: "Tokens" },
   { id: "voice", label: "Voice" },
+  { id: "text", label: "Source Text" },
   { id: "export", label: "Export" },
 ] as const;
 
@@ -395,6 +401,44 @@ function SectionAnchor({
       </div>
       {children}
     </section>
+  );
+}
+
+function SourceTextSection({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+          // text read from the source · {words.toLocaleString()} words
+        </p>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => copy(text)}>
+            <Copy className="mr-2 h-3.5 w-3.5" /> Copy text
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setExpanded((v) => !v)}>
+            {expanded ? "Collapse" : "Expand"}
+          </Button>
+        </div>
+      </div>
+      <div
+        className={`relative overflow-hidden rounded-2xl border border-[color:var(--border-subtle)] bg-foreground/[0.02] p-5 sm:p-6 ${
+          expanded ? "" : "max-h-96"
+        }`}
+      >
+        <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-foreground/80">
+          {text}
+        </pre>
+        {!expanded && (
+          <button
+            onClick={() => setExpanded(true)}
+            className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent"
+            aria-label="Expand full text"
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
